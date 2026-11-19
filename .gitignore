@@ -1,0 +1,7 @@
+# What npm, the page build and go build leave in the checkout.
+node_modules/
+web/static/vendor/
+/terminal-share
+*.exe
+# OpenTofu's working files.
+tofu/.terraform/

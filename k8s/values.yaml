@@ -1,0 +1,46 @@
+# The image by tag and digest, rewritten by the suite's pin PR on each release. The first
+# release's pin PR replaces this placeholder, which names no image.
+image: romainecr.azurecr.io/terminal-share:unreleased@sha256:0000000000000000000000000000000000000000000000000000000000000000
+imagePullPolicy: IfNotPresent
+
+replicas: 1
+
+# The pod's Azure identity, terminal-share-identity (tofu/identity.tf), federated to this
+# ServiceAccount. clientId is the tofu output terminal_share_identity_client_id, pinned
+# here after the first apply; until then the pod runs without one and storing fails.
+serviceAccount:
+  name: terminal-share
+  clientId: ""
+
+storage:
+  # tofu outputs storage_account_url and snapshots_container.
+  accountUrl: https://romaineterminalshare.blob.core.windows.net/
+  container: snapshots
+
+publicUrl: https://share.romaine.life
+
+service:
+  port: 80
+  targetPort: http
+
+container:
+  port: 8080
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+gateway:
+  hostname: share.romaine.life
+  parentGateway:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: main
+    namespace: envoy-gateway-system
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

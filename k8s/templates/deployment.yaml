@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terminal-share
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: terminal-share
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: terminal-share
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: terminal-share
+        {{- if .Values.serviceAccount.clientId }}
+        azure.workload.identity/use: "true"
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name | quote }}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: terminal-share
+          image: {{ .Values.image | quote }}
+          imagePullPolicy: {{ .Values.imagePullPolicy | quote }}
+          env:
+            - name: PORT
+              value: {{ .Values.container.port | quote }}
+            - name: PUBLIC_URL
+              value: {{ .Values.publicUrl | quote }}
+            - name: STORAGE_ACCOUNT_URL
+              value: {{ .Values.storage.accountUrl | quote }}
+            - name: STORAGE_CONTAINER
+              value: {{ .Values.storage.container | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.container.port }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3

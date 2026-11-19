@@ -1,0 +1,15 @@
+{
+  "name": "terminal-share-page",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The share page's engine (rioterm) and its checks; build.mjs copies the engine into static/vendor/ for the Go binary to embed.",
+  "scripts": {
+    "build": "node build.mjs",
+    "lint": "node lint.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "rioterm": "0.1.8"
+  }
+}

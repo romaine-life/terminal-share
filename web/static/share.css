@@ -1,0 +1,93 @@
+/* The terminal's font, from the Nerd Fonts release (OFL, fonts/LICENSE.txt). Its family
+   name is the one Windows gives the installed font, which is what a snapshot names. */
+@font-face {
+  font-family: "CaskaydiaMono NF";
+  src: url("/assets/fonts/CaskaydiaMonoNerdFont-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "CaskaydiaMono NF";
+  src: url("/assets/fonts/CaskaydiaMonoNerdFont-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  color-scheme: dark;
+  --page: #16161a;
+  --text: #e6e6e6;
+  --muted: #9a9aa2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--page);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+header {
+  margin-bottom: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+#meta {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+#meta:empty {
+  display: none;
+}
+
+#status,
+.state {
+  margin: 24px 0;
+  color: var(--muted);
+}
+
+#status.problem {
+  color: var(--text);
+}
+
+#terminal {
+  padding: 8px;
+  border-radius: 6px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+#terminal[hidden] {
+  display: none;
+}
+
+/* The canvas is drawn at a font size that fills the width; scaling makes it exact. */
+#terminal canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.about {
+  max-width: 40rem;
+}
+
+code {
+  font-family: "CaskaydiaMono NF", ui-monospace, monospace;
+}

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Shared terminal</title>
+  <link rel="stylesheet" href="/assets/share.css">
+  <link rel="preload" href="/assets/fonts/CaskaydiaMonoNerdFont-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="modulepreload" href="/assets/vendor/rioterm/dist/index.js">
+  <script type="module" src="/assets/share.js"></script>
+</head>
+<body>
+  <header>
+    <h1 id="title">Shared terminal</h1>
+    <p id="meta"></p>
+  </header>
+  <main>
+    <p id="status" role="status">Loading the shared terminal…</p>
+    <div id="terminal" hidden></div>
+  </main>
+  <noscript><p class="state">This page needs JavaScript to draw the terminal.</p></noscript>
+</body>
+</html>
