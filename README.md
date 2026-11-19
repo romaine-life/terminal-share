@@ -105,6 +105,5 @@ Application in infra-bootstrap's `k8s/apps`, in the `terminal-share` namespace;
 external-dns publishes `share.romaine.life` from the HTTPRoute, and cert-manager issues
 its certificate.
 
-After the first `tofu` apply, `serviceAccount.clientId` in `k8s/values.yaml` takes the
-output `terminal_share_identity_client_id`; until then the pod has no Azure identity and
-can't store snapshots.
+`serviceAccount.clientId` in `k8s/values.yaml` is the tofu output
+`terminal_share_identity_client_id`, the pod's workload identity.

@@ -6,11 +6,10 @@ imagePullPolicy: IfNotPresent
 replicas: 1
 
 # The pod's Azure identity, terminal-share-identity (tofu/identity.tf), federated to this
-# ServiceAccount. clientId is the tofu output terminal_share_identity_client_id, pinned
-# here after the first apply; until then the pod runs without one and storing fails.
+# ServiceAccount. clientId is the tofu output terminal_share_identity_client_id.
 serviceAccount:
   name: terminal-share
-  clientId: ""
+  clientId: f3fa18e9-7782-41d2-90d5-773870c07594
 
 storage:
   # tofu outputs storage_account_url and snapshots_container.
