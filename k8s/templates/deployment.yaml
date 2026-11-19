@@ -26,6 +26,9 @@ spec:
       serviceAccountName: {{ .Values.serviceAccount.name | quote }}
       securityContext:
         runAsNonRoot: true
+        # distroless's nonroot user by number: the kubelet can't verify the image's named one.
+        runAsUser: 65532
+        runAsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
       containers:
