@@ -11,8 +11,9 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
+
+	"github.com/romaine-life/logline"
 
 	"github.com/romaine-life/terminal-share/internal/auth"
 	"github.com/romaine-life/terminal-share/internal/store"
@@ -43,12 +44,10 @@ type Server struct {
 	PublicURL string
 	// Static is the page's files: index.html, share.html and what they load.
 	Static fs.FS
-	// Log receives one line per request.
-	Log io.Writer
+	// Log receives one line per request; nil logs nothing.
+	Log *logline.Logger
 	// Now is the clock; time.Now when nil.
 	Now func() time.Time
-
-	logMu sync.Mutex
 }
 
 func (s *Server) now() time.Time {
@@ -126,18 +125,22 @@ func (s *Server) logged(next http.Handler) http.Handler {
 		if r.URL.Path == "/healthz" && sw.status == http.StatusOK {
 			return
 		}
-		line := fmt.Sprintf("%s %s %s %d %dms", start.UTC().Format(time.RFC3339), r.Method, redactPath(r.URL.Path), sw.status, s.now().Sub(start).Milliseconds())
+		if s.Log == nil {
+			return
+		}
+		level := logline.Info
+		if sw.status >= 500 {
+			level = logline.Error
+		}
+		kv := []any{"method", r.Method, "path", redactPath(r.URL.Path), "status", sw.status, "ms", s.now().Sub(start).Milliseconds()}
 		if ri.device != "" {
-			line += " device=" + ri.device
+			kv = append(kv, "device", ri.device)
 		}
 		if ri.err != "" {
-			line += fmt.Sprintf(" error=%q", ri.err)
+			// A store's or the token check's error text is from outside the program.
+			kv = append(kv, "error", logline.Redact(ri.err))
 		}
-		if s.Log != nil {
-			s.logMu.Lock()
-			_, _ = fmt.Fprintln(s.Log, line)
-			s.logMu.Unlock()
-		}
+		s.Log.Log(level, "request", kv...)
 	})
 }
 

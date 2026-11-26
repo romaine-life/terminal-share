@@ -7,6 +7,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.15.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.8.3
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/romaine-life/logline v0.1.5
 )
 
 require (

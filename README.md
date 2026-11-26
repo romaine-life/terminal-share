@@ -74,9 +74,11 @@ Every error is `{"error": "<one sentence>"}`.
   `CanvasRenderer` in the snapshot's colors and font, sized to the page's width. It shows
   the title and "shared <time ago>, expires <date>" above it, and says so in words while
   loading, for an expired or unknown share, and when the network fails.
-- Each request is one line on stdout: time, method, path (a share's id cut to its first
-  six characters), status, duration, and the device for a share. Tokens and snapshot
-  content are never logged; a passing health check isn't.
+- Each request is one line on stdout in the estate's log line
+  ([logline](https://forgejo.romaine.life/romaine-life/logline), AHT-204): `request` with
+  `method`, `path` (a share's id cut to its first six characters), `status`, `ms`, the
+  `device` for a share and, when it failed, the `error` (masked); a server failure is an
+  `error` line. Tokens and snapshot content are never logged; a passing health check isn't.
 
 ## Running and testing locally
 

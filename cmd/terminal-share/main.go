@@ -17,7 +17,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +24,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/romaine-life/logline"
 
 	"github.com/romaine-life/terminal-share/internal/auth"
 	"github.com/romaine-life/terminal-share/internal/server"
@@ -46,9 +46,14 @@ func main() {
 		return
 	}
 	if err := run(*memory); err != nil {
-		log.Fatalf("terminal-share: %v", err)
+		stdout.Error("terminal-share stopped", "error", logline.Redact(err.Error()))
+		os.Exit(1)
 	}
 }
+
+// stdout is the service's log: the estate's one log line (romaine-life/logline, AHT-204), which
+// the cluster ships.
+var stdout = logline.New(os.Stdout)
 
 func env(name, fallback string) string {
 	if value := os.Getenv(name); value != "" {
@@ -84,7 +89,7 @@ func run(memory bool) error {
 		Auth:      auth.New(auth.JWKSURL, nil, nil),
 		PublicURL: env("PUBLIC_URL", "https://share.romaine.life"),
 		Static:    web.Static(),
-		Log:       os.Stdout,
+		Log:       stdout,
 	}
 	httpServer := &http.Server{
 		Addr:              ":" + env("PORT", "8080"),
@@ -99,7 +104,7 @@ func run(memory bool) error {
 	defer stop()
 	errs := make(chan error, 1)
 	go func() { errs <- httpServer.ListenAndServe() }()
-	fmt.Printf("terminal-share listening on %s\n", httpServer.Addr)
+	stdout.Info("terminal-share listening", "addr", httpServer.Addr)
 	select {
 	case err := <-errs:
 		return err

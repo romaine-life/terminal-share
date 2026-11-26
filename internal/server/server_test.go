@@ -13,6 +13,8 @@ import (
 	"testing/fstest"
 	"time"
 
+	"github.com/romaine-life/logline"
+
 	"github.com/romaine-life/terminal-share/internal/auth"
 	"github.com/romaine-life/terminal-share/internal/store"
 	"github.com/romaine-life/terminal-share/internal/testissuer"
@@ -51,7 +53,7 @@ func newHarness(t *testing.T) *harness {
 			"share.html": {Data: []byte("<h1>share</h1>")},
 			"share.js":   {Data: []byte("export {};")},
 		},
-		Log: h.log,
+		Log: logline.New(h.log),
 		Now: clock,
 	}
 	h.handler = srv.Handler()
@@ -350,13 +352,42 @@ func (failingStore) Get(context.Context, string) ([]byte, error) {
 
 func TestStoreFailureIsAServerError(t *testing.T) {
 	h := newHarness(t)
-	srv := &Server{Store: failingStore{}, Auth: authFunc(func(context.Context, string) (string, error) { return "nelsonpc", nil }), Log: h.log}
+	srv := &Server{Store: failingStore{}, Auth: authFunc(func(context.Context, string) (string, error) { return "nelsonpc", nil }), Log: logline.New(h.log)}
 	h.handler = srv.Handler()
 	errorOf(t, h.post(t, validBody(), "token"), http.StatusInternalServerError)
 	errorOf(t, h.do("GET", "/api/snapshots/abcdefghijklmnopqrstuvwxyz", nil, ""), http.StatusInternalServerError)
-	if !strings.Contains(h.log.String(), `error="storage down"`) {
+	lines := strings.Split(strings.TrimSpace(h.log.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("want a line for each failed request:\n%s", h.log)
+	}
+	for _, line := range lines {
+		if e := parsed(t, line); e.level != logline.Error || e.fields["status"] != "500" || e.fields["error"] == "" {
+			t.Fatalf("a store failure is an error line that says why: %s", line)
+		}
+	}
+	if !strings.Contains(h.log.String(), `error="storage down"`) && !strings.Contains(h.log.String(), `error="stored record: storage down"`) {
 		t.Fatalf("the log line doesn't say why: %s", h.log)
 	}
+}
+
+type entry struct {
+	level   logline.Level
+	message string
+	fields  map[string]string
+}
+
+// parsed is a log line read back, which fails the test unless it is the estate's standard line.
+func parsed(t *testing.T, line string) entry {
+	t.Helper()
+	e, err := logline.Parse(line)
+	if err != nil {
+		t.Fatalf("not a standard log line (%v): %s", err, line)
+	}
+	fields := map[string]string{}
+	for _, f := range e.Fields {
+		fields[f.Key] = f.Value
+	}
+	return entry{e.Level, e.Message, fields}
 }
 
 type authFunc func(context.Context, string) (string, error)
@@ -376,10 +407,12 @@ func TestLogLines(t *testing.T) {
 	if len(lines) != 2 {
 		t.Fatalf("want a line for the POST and the page, none for the passing health check:\n%s", h.log)
 	}
-	if !strings.Contains(lines[0], "POST /api/snapshots 201 ") || !strings.HasSuffix(lines[0], " device=nelsonpc") {
+	post, page := parsed(t, lines[0]), parsed(t, lines[1])
+	if post.level != logline.Info || post.message != "request" || post.fields["method"] != "POST" || post.fields["path"] != "/api/snapshots" ||
+		post.fields["status"] != "201" || post.fields["device"] != "nelsonpc" || post.fields["ms"] == "" {
 		t.Fatalf("POST line: %s", lines[0])
 	}
-	if !strings.Contains(lines[1], "GET /s/"+created["id"][:6]+"… 200 ") {
+	if page.fields["method"] != "GET" || page.fields["path"] != "/s/"+created["id"][:6]+"…" || page.fields["status"] != "200" {
 		t.Fatalf("page line: %s", lines[1])
 	}
 	for _, secret := range []string{token, created["id"], "nelson\x1b", "docs"} {

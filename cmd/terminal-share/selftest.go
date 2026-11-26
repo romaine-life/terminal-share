@@ -48,7 +48,6 @@ func runSelfTest() error {
 		Auth:      auth.New(jwks+"/jwks", nil, nil),
 		PublicURL: "https://share.romaine.life",
 		Static:    web.Static(),
-		Log:       io.Discard,
 	}
 	base, err := serve(srv.Handler())
 	if err != nil {
